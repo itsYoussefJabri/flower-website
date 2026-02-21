@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
 const vertexShader = `
@@ -78,6 +78,29 @@ function FlowerTrail() {
   const canvasRef = useRef(null);
   const cleanRef = useRef(null);
   const animFrameRef = useRef(null);
+  const [showHint, setShowHint] = useState(false);
+  const hintTimerRef = useRef(null);
+
+  const triggerHint = () => {
+    setShowHint(true);
+    clearTimeout(hintTimerRef.current);
+    hintTimerRef.current = setTimeout(() => setShowHint(false), 3000);
+  };
+
+  useEffect(() => {
+    const isPortrait = window.matchMedia("(orientation: portrait) and (max-width: 900px)");
+    if (!isPortrait.matches) {
+      triggerHint();
+    }
+    const handleOrientation = (e) => {
+      if (!e.matches) triggerHint();
+    };
+    isPortrait.addEventListener("change", handleOrientation);
+    return () => {
+      isPortrait.removeEventListener("change", handleOrientation);
+      clearTimeout(hintTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     const canvasEl = canvasRef.current;
@@ -262,7 +285,7 @@ function FlowerTrail() {
   return (
     <div className="canvas-page">
       <canvas ref={canvasRef} />
-      <div className="page-overlay-text"></div>
+      <div className={`page-overlay-text${showHint ? " hint-visible" : " hint-hidden"}`}>Click To Draw Flowers</div>
       <div className="clean-btn" ref={cleanRef}>
         clean the screen
       </div>
