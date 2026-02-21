@@ -149,7 +149,7 @@ function Home() {
       <div className="home-welcome">
         <h1>
           Welcome
-          <span>CHAIMAE</span>
+          <span>QAMAR</span>
         </h1>
       </div>
     </div>
