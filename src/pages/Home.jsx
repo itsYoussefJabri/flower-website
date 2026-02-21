@@ -1,0 +1,186 @@
+import React, { useEffect, useRef } from "react";
+import gsap from "gsap";
+
+function Home() {
+  const containerRef = useRef(null);
+  const svgContainerRef = useRef(null);
+  const animatedRef = useRef(false);
+
+  useEffect(() => {
+    // Fetch the SVG and inject it
+    fetch("/flowers-bg.svg")
+      .then((res) => res.text())
+      .then((svgText) => {
+        if (svgContainerRef.current && !animatedRef.current) {
+          svgContainerRef.current.innerHTML = svgText;
+          // Force the SVG to cover the viewport (like object-fit: cover)
+          // so flowers stay at the edges on all screen sizes including mobile
+          const svgEl = svgContainerRef.current.querySelector("svg");
+          if (svgEl) {
+            // Remove default viewBox constraints
+            svgEl.removeAttribute("width");
+            svgEl.removeAttribute("height");
+            svgEl.setAttribute("preserveAspectRatio", "xMidYMid meet");
+            svgEl.style.display = "block";
+            svgEl.style.position = "absolute";
+            svgEl.style.top = "50%";
+            svgEl.style.left = "50%";
+            svgEl.style.transform = "translate(-50%, -50%)";
+
+            // SVG viewBox is 1800x1125 (landscape ~1.6:1)
+            // On portrait mobile, we must make the SVG wide enough
+            // that flowers on left/right sides are visible
+            const svgAspect = 1800 / 1125;
+            const screenAspect = window.innerWidth / window.innerHeight;
+
+            if (screenAspect < svgAspect) {
+              // Portrait: make SVG height fill viewport, width scales proportionally
+              // This makes the SVG wider than the screen, showing flowers on sides
+              svgEl.style.height = "100vh";
+              svgEl.style.width = `${100 * svgAspect / screenAspect}vw`;
+              svgEl.style.minWidth = "160vw";
+            } else {
+              // Landscape: fill width, height scales
+              svgEl.style.width = "100vw";
+              svgEl.style.height = "auto";
+            }
+          }
+          animatedRef.current = true;
+          runAnimation();
+        }
+      })
+      .catch((err) => console.log("SVG load error:", err));
+
+    return () => {
+      gsap.killTweensOf("*");
+    };
+  }, []);
+
+  function runAnimation() {
+    const container = svgContainerRef.current;
+    if (!container) return;
+
+    const branches = Array.from(
+      container.querySelectorAll("[id^=BranchGroup]"),
+    );
+    const branchesLeft = Array.from(
+      container.querySelectorAll("[id^=BranchGroup-left]"),
+    );
+    const branchesRight = Array.from(
+      container.querySelectorAll("[id^=BranchGroup-right]"),
+    );
+    const branchesBottom = Array.from(
+      container.querySelectorAll("[id^=BranchGroup-bottom]"),
+    );
+
+    // Shuffle
+    const shuffled = [...branches].sort(() => 0.5 - Math.random());
+
+    // Setup
+    gsap.set(container.querySelectorAll("[id^=petal-]"), { fill: "#e5d081" });
+    gsap.set(
+      [
+        ...container.querySelectorAll("[id^=flower-]"),
+        ...container.querySelectorAll("[id^=bud-]"),
+        ...container.querySelectorAll("[id^=bloom-]"),
+      ],
+      { scale: 0, transformOrigin: "center center" },
+    );
+    gsap.set(branchesLeft, { transformOrigin: "bottom left" });
+    gsap.set(branchesRight, { transformOrigin: "bottom right" });
+    gsap.set(branchesBottom, { transformOrigin: "bottom center" });
+
+    const bl1 = container.querySelector("#BranchGroup-left-1");
+    if (bl1) gsap.set(bl1, { transformOrigin: "0% 20%" });
+    const br16 = container.querySelector("#BranchGroup-right-16");
+    if (br16) gsap.set(br16, { transformOrigin: "100% 20%" });
+
+    gsap.set(shuffled, { scale: 0 });
+
+    // Make visible
+    const svgContainer = containerRef.current?.querySelector(".svg-background");
+    if (svgContainer) svgContainer.style.visibility = "visible";
+
+    // Master timeline
+    const master = gsap.timeline();
+
+    // Grow branches
+    master.to(shuffled, {
+      scale: 1,
+      ease: "power1.out",
+      duration: 3,
+      stagger: {
+        each: 0.25,
+        onStart: function () {
+          bloomFlowers(this.targets()[0], container);
+        },
+        onComplete: function () {
+          swayBranch(this.targets()[0], container);
+        },
+      },
+    });
+
+    // Small branches sway
+    master.add(() => {
+      const smallBranches = Array.from(
+        container.querySelectorAll("[id^=smallbranch-group]"),
+      );
+      gsap.to(smallBranches, {
+        rotation: 5,
+        ease: "sine.inOut",
+        duration: 2 + Math.random(),
+        stagger: Math.random() / 1.2,
+        yoyo: true,
+        repeat: -1,
+      });
+    });
+  }
+
+  function bloomFlowers(branch, container) {
+    const petals = branch.querySelectorAll("[id^=petal-]");
+    const flowers = branch.querySelectorAll("[id^=flower-]");
+    const buds = branch.querySelectorAll("[id^=bud-]");
+    const blooms = branch.querySelectorAll("[id^=bloom-]");
+
+    const tl = gsap.timeline({ delay: 1.5 });
+    tl.to([...flowers, ...buds, ...blooms], {
+      scale: 1,
+      ease: "back.out(2)",
+      duration: 2,
+      stagger: 0.5,
+    })
+      .to(flowers, { rotation: 45, ease: "sine.out", duration: 3 }, 0)
+      .to(petals, { fill: "#fff", duration: 1 }, 0);
+  }
+
+  function swayBranch(branch) {
+    const position = branch.getAttribute("data-position");
+    let rotation = position === "left" ? -10 : position === "right" ? 5 : 10;
+
+    gsap.to(branch, {
+      rotation: rotation,
+      ease: "sine.inOut",
+      duration: 2 + Math.random(),
+      yoyo: true,
+      repeat: -1,
+    });
+  }
+
+  return (
+    <div className="home-page" ref={containerRef}>
+      <div
+        className="svg-background"
+        ref={svgContainerRef}
+        style={{ visibility: "hidden" }}
+      />
+      <div className="home-welcome">
+        <h1>
+          Welcome
+          <span>QAMAR</span>
+        </h1>
+      </div>
+    </div>
+  );
+}
+
+export default Home;

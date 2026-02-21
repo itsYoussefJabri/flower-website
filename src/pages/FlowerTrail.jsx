@@ -1,0 +1,273 @@
+import React, { useEffect, useRef } from "react";
+import * as THREE from "three";
+
+const vertexShader = `
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = vec4(position, 1.);
+  }
+`;
+
+const fragmentShader = `
+  #define PI 3.14159265359
+
+  uniform float u_ratio;
+  uniform float u_moving;
+  uniform float u_stop_time;
+  uniform float u_speed;
+  uniform vec2 u_stop_randomizer;
+  uniform float u_clean;
+  uniform vec2 u_point;
+  uniform sampler2D u_texture;
+  varying vec2 vUv;
+
+  float rand(vec2 n) {
+    return fract(sin(dot(n, vec2(12.9898, 4.1414))) * 43758.5453);
+  }
+  float noise(vec2 n) {
+    const vec2 d = vec2(0., 1.);
+    vec2 b = floor(n), f = smoothstep(vec2(0.), vec2(1.), fract(n));
+    return mix(mix(rand(b), rand(b + d.yx), f.x), mix(rand(b + d.xy), rand(b + d.yy), f.x), f.y);
+  }
+
+  float flower_shape(vec2 _point, float _size, float _outline, float _tickniess, float _noise, float _angle_offset) {
+    float random_by_uv = noise(vUv);
+    float petals_thickness = .5;
+    float petals_number = 5. + floor(u_stop_randomizer[0] * 4.);
+    float angle_animated_offset = .7 * (random_by_uv - .5) / (1. + 30. * u_stop_time);
+    float flower_angle = atan(_point.y, _point.x) - angle_animated_offset;
+    float flower_sectoral_shape = abs(sin(flower_angle * .5 * petals_number + _angle_offset)) + _tickniess * petals_thickness;
+    vec2 flower_size_range = vec2(4., 18.);
+    float flower_radial_shape = length(_point) * (flower_size_range[0] + flower_size_range[1] * u_stop_randomizer[0]);
+    float radius_noise = sin(flower_angle * 13. + 15. * random_by_uv);
+    flower_radial_shape += _noise * radius_noise;
+    float flower_radius_grow = min(20000. * u_stop_time, 1.);
+    flower_radius_grow = 1. / flower_radius_grow;
+    float flower_shape = 1. - smoothstep(0., _size * flower_sectoral_shape, _outline * flower_radius_grow * flower_radial_shape);
+    flower_shape *= (1. - u_moving);
+    flower_shape *= (1. - step(1., u_stop_time));
+    return flower_shape;
+  }
+
+  void main() {
+    vec3 base = texture2D(u_texture, vUv).xyz;
+    vec2 cursor = vUv - u_point.xy;
+    cursor.x *= u_ratio;
+
+    // STEM
+    vec3 stem_color = vec3(0., 2., 1.5);
+    float stem_radius = .003 * u_speed * u_moving;
+    float stem_shape = 1. - pow(smoothstep(0., stem_radius, dot(cursor, cursor)), .03);
+    vec3 stem = stem_shape * stem_color;
+
+    // FLOWER
+    vec3 flower_color = vec3(.7 + u_stop_randomizer[1], .8 * u_stop_randomizer[1], 2.9 + u_stop_randomizer[0] * .6);
+    vec3 flower_new = flower_color * flower_shape(cursor, 1., .96, 1., .15, 0.);
+    vec3 flower_mask = 1. - vec3(flower_shape(cursor, 1.05, 1.07, 1., .15, 0.));
+    vec3 flower_mid = vec3(-.6) * flower_shape(cursor, .15, 1., 2., .1, 1.9);
+
+    vec3 color = base * flower_mask + (flower_new + flower_mid + stem);
+    color *= u_clean;
+    color = clamp(color, vec3(.0, .0, .15), vec3(1., 1., .4));
+    gl_FragColor = vec4(color, 1.);
+  }
+`;
+
+function FlowerTrail() {
+  const canvasRef = useRef(null);
+  const cleanRef = useRef(null);
+  const animFrameRef = useRef(null);
+
+  useEffect(() => {
+    const canvasEl = canvasRef.current;
+    if (!canvasEl) return;
+
+    const pointer = {
+      x: 0.5,
+      y: 0.65,
+      moved: false,
+      speed: 0,
+      vanishCanvas: false,
+      drawingAllowed: true,
+    };
+
+    let renderer = new THREE.WebGLRenderer({ canvas: canvasEl, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // Match original CodePen color output (Three.js 0.139 used Linear color space)
+    renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+
+    let sceneShader = new THREE.Scene();
+    let sceneBasic = new THREE.Scene();
+    let camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 10);
+    let clock = new THREE.Clock();
+
+    let renderTargets = [
+      new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight),
+      new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight),
+    ];
+    // Ensure render target textures use linear color space
+    renderTargets[0].texture.colorSpace = THREE.LinearSRGBColorSpace;
+    renderTargets[1].texture.colorSpace = THREE.LinearSRGBColorSpace;
+
+    let shaderMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        u_stop_time: { value: 0 },
+        u_point: { value: new THREE.Vector2(pointer.x, pointer.y) },
+        u_moving: { value: 0 },
+        u_speed: { value: 0 },
+        u_stop_randomizer: {
+          value: new THREE.Vector2(Math.random(), Math.random()),
+        },
+        u_clean: { value: 1 },
+        u_ratio: { value: window.innerWidth / window.innerHeight },
+        u_texture: { value: null },
+      },
+      vertexShader,
+      fragmentShader,
+    });
+
+    let basicMaterial = new THREE.MeshBasicMaterial();
+    const planeGeometry = new THREE.PlaneGeometry(2, 2);
+    sceneBasic.add(new THREE.Mesh(planeGeometry, basicMaterial));
+    sceneShader.add(new THREE.Mesh(planeGeometry, shaderMaterial));
+
+    function updateSize() {
+      shaderMaterial.uniforms.u_ratio.value =
+        window.innerWidth / window.innerHeight;
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderTargets.forEach((rt) =>
+        rt.setSize(window.innerWidth, window.innerHeight),
+      );
+    }
+
+    updateSize();
+
+    // Initial flower
+    setTimeout(() => {
+      pointer.x = 0.7;
+      pointer.y = 0.5;
+      pointer.moved = true;
+    }, 400);
+
+    function render() {
+      shaderMaterial.uniforms.u_clean.value = pointer.vanishCanvas ? 0 : 1;
+      shaderMaterial.uniforms.u_point.value = new THREE.Vector2(
+        pointer.x,
+        1 - pointer.y,
+      );
+      shaderMaterial.uniforms.u_texture.value = renderTargets[0].texture;
+      shaderMaterial.uniforms.u_ratio.value =
+        window.innerWidth / window.innerHeight;
+
+      if (pointer.moved) {
+        shaderMaterial.uniforms.u_moving.value = 1;
+        shaderMaterial.uniforms.u_stop_randomizer.value = new THREE.Vector2(
+          Math.random(),
+          Math.random(),
+        );
+        if (window.innerWidth < 650) {
+          shaderMaterial.uniforms.u_stop_randomizer.value.x *= 0.2;
+          shaderMaterial.uniforms.u_stop_randomizer.value.x += 0.8;
+        }
+        shaderMaterial.uniforms.u_stop_time.value = 0;
+        pointer.moved = false;
+      } else {
+        shaderMaterial.uniforms.u_moving.value = 0;
+      }
+      shaderMaterial.uniforms.u_stop_time.value += clock.getDelta();
+      shaderMaterial.uniforms.u_speed.value = pointer.speed;
+
+      renderer.setRenderTarget(renderTargets[1]);
+      renderer.render(sceneShader, camera);
+      basicMaterial.map = renderTargets[1].texture;
+      renderer.setRenderTarget(null);
+      renderer.render(sceneBasic, camera);
+
+      let tmp = renderTargets[0];
+      renderTargets[0] = renderTargets[1];
+      renderTargets[1] = tmp;
+
+      animFrameRef.current = requestAnimationFrame(render);
+    }
+
+    render();
+
+    const handleMouseMove = (e) => {
+      if (pointer.drawingAllowed) {
+        pointer.moved = true;
+        const dx = 12 * (e.pageX / window.innerWidth - pointer.x);
+        const dy = 12 * (e.pageY / window.innerHeight - pointer.y);
+        pointer.x = e.pageX / window.innerWidth;
+        pointer.y = e.pageY / window.innerHeight;
+        pointer.speed = Math.min(2, Math.pow(dx, 2) + Math.pow(dy, 2));
+      }
+    };
+
+    const handleClick = (e) => {
+      pointer.x = e.pageX / window.innerWidth;
+      pointer.y = e.pageY / window.innerHeight;
+      pointer.drawingAllowed = !pointer.drawingAllowed;
+      if (pointer.drawingAllowed) pointer.moved = true;
+    };
+
+    const handleTouchMove = (e) => {
+      pointer.moved = true;
+      const dx = 5 * (e.targetTouches[0].pageX / window.innerWidth - pointer.x);
+      const dy =
+        5 * (e.targetTouches[0].pageY / window.innerHeight - pointer.y);
+      pointer.x = e.targetTouches[0].pageX / window.innerWidth;
+      pointer.y = e.targetTouches[0].pageY / window.innerHeight;
+      pointer.speed = Math.min(2, 20 * (Math.pow(dx, 2) + Math.pow(dy, 2)));
+    };
+
+    const handleResize = () => {
+      cleanCanvas();
+      updateSize();
+    };
+
+    function cleanCanvas() {
+      pointer.vanishCanvas = true;
+      setTimeout(() => {
+        pointer.vanishCanvas = false;
+      }, 50);
+    }
+
+    window.addEventListener("mousemove", handleMouseMove);
+    canvasEl.addEventListener("click", handleClick);
+    window.addEventListener("touchmove", handleTouchMove);
+    window.addEventListener("resize", handleResize);
+
+    if (cleanRef.current) {
+      cleanRef.current.addEventListener("click", (e) => {
+        e.stopPropagation();
+        cleanCanvas();
+      });
+    }
+
+    return () => {
+      cancelAnimationFrame(animFrameRef.current);
+      window.removeEventListener("mousemove", handleMouseMove);
+      canvasEl.removeEventListener("click", handleClick);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("resize", handleResize);
+      renderer.dispose();
+      shaderMaterial.dispose();
+      basicMaterial.dispose();
+      planeGeometry.dispose();
+      renderTargets.forEach((rt) => rt.dispose());
+    };
+  }, []);
+
+  return (
+    <div className="canvas-page">
+      <canvas ref={canvasRef} />
+      <div className="page-overlay-text"></div>
+      <div className="clean-btn" ref={cleanRef}>
+        clean the screen
+      </div>
+    </div>
+  );
+}
+
+export default FlowerTrail;
