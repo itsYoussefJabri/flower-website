@@ -6,18 +6,34 @@ function Home() {
   const svgContainerRef = useRef(null);
   const animatedRef = useRef(false);
 
+  // Recalculate SVG sizing to cover viewport on any screen orientation
+  function resizeSvg() {
+    if (!svgContainerRef.current) return;
+    const svgEl = svgContainerRef.current.querySelector("svg");
+    if (!svgEl) return;
+
+    const svgAspect = 1800 / 1125;
+    const screenAspect = window.innerWidth / window.innerHeight;
+
+    if (screenAspect < svgAspect) {
+      svgEl.style.height = "100vh";
+      svgEl.style.width = `${100 * svgAspect / screenAspect}vw`;
+      svgEl.style.minWidth = "160vw";
+    } else {
+      svgEl.style.width = "100vw";
+      svgEl.style.height = "100vh";
+      svgEl.style.minWidth = "";
+    }
+  }
+
   useEffect(() => {
-    // Fetch the SVG and inject it
     fetch("/flowers-bg.svg")
       .then((res) => res.text())
       .then((svgText) => {
         if (svgContainerRef.current && !animatedRef.current) {
           svgContainerRef.current.innerHTML = svgText;
-          // Force the SVG to cover the viewport (like object-fit: cover)
-          // so flowers stay at the edges on all screen sizes including mobile
           const svgEl = svgContainerRef.current.querySelector("svg");
           if (svgEl) {
-            // Remove default viewBox constraints
             svgEl.removeAttribute("width");
             svgEl.removeAttribute("height");
             svgEl.setAttribute("preserveAspectRatio", "xMidYMid meet");
@@ -26,24 +42,7 @@ function Home() {
             svgEl.style.top = "50%";
             svgEl.style.left = "50%";
             svgEl.style.transform = "translate(-50%, -50%)";
-
-            // SVG viewBox is 1800x1125 (landscape ~1.6:1)
-            // On portrait mobile, we must make the SVG wide enough
-            // that flowers on left/right sides are visible
-            const svgAspect = 1800 / 1125;
-            const screenAspect = window.innerWidth / window.innerHeight;
-
-            if (screenAspect < svgAspect) {
-              // Portrait: make SVG height fill viewport, width scales proportionally
-              // This makes the SVG wider than the screen, showing flowers on sides
-              svgEl.style.height = "100vh";
-              svgEl.style.width = `${100 * svgAspect / screenAspect}vw`;
-              svgEl.style.minWidth = "160vw";
-            } else {
-              // Landscape: fill width, height scales
-              svgEl.style.width = "100vw";
-              svgEl.style.height = "auto";
-            }
+            resizeSvg();
           }
           animatedRef.current = true;
           runAnimation();
@@ -51,7 +50,10 @@ function Home() {
       })
       .catch((err) => console.log("SVG load error:", err));
 
+    // Re-run sizing on rotation / resize
+    window.addEventListener("resize", resizeSvg);
     return () => {
+      window.removeEventListener("resize", resizeSvg);
       gsap.killTweensOf("*");
     };
   }, []);
@@ -176,7 +178,7 @@ function Home() {
       <div className="home-welcome">
         <h1>
           Welcome
-          <span>QAMAR</span>
+          <span>CHAIMAE</span>
         </h1>
       </div>
     </div>
