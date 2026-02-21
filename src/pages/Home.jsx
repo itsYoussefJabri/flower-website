@@ -6,26 +6,6 @@ function Home() {
   const svgContainerRef = useRef(null);
   const animatedRef = useRef(false);
 
-  // Recalculate SVG sizing to cover viewport on any screen orientation
-  function resizeSvg() {
-    if (!svgContainerRef.current) return;
-    const svgEl = svgContainerRef.current.querySelector("svg");
-    if (!svgEl) return;
-
-    const svgAspect = 1800 / 1125;
-    const screenAspect = window.innerWidth / window.innerHeight;
-
-    if (screenAspect < svgAspect) {
-      svgEl.style.height = "100vh";
-      svgEl.style.width = `${100 * svgAspect / screenAspect}vw`;
-      svgEl.style.minWidth = "160vw";
-    } else {
-      svgEl.style.width = "100vw";
-      svgEl.style.height = "100vh";
-      svgEl.style.minWidth = "";
-    }
-  }
-
   useEffect(() => {
     fetch("/flowers-bg.svg")
       .then((res) => res.text())
@@ -36,13 +16,7 @@ function Home() {
           if (svgEl) {
             svgEl.removeAttribute("width");
             svgEl.removeAttribute("height");
-            svgEl.setAttribute("preserveAspectRatio", "xMidYMid meet");
-            svgEl.style.display = "block";
-            svgEl.style.position = "absolute";
-            svgEl.style.top = "50%";
-            svgEl.style.left = "50%";
-            svgEl.style.transform = "translate(-50%, -50%)";
-            resizeSvg();
+            svgEl.setAttribute("preserveAspectRatio", "xMidYMid slice");
           }
           animatedRef.current = true;
           runAnimation();
@@ -50,10 +24,7 @@ function Home() {
       })
       .catch((err) => console.log("SVG load error:", err));
 
-    // Re-run sizing on rotation / resize
-    window.addEventListener("resize", resizeSvg);
     return () => {
-      window.removeEventListener("resize", resizeSvg);
       gsap.killTweensOf("*");
     };
   }, []);
