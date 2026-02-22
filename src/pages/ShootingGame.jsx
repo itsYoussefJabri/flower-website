@@ -59,6 +59,12 @@ function ShootingGame() {
   const comboTimerRef = useRef(null);
   const chosenTimeRef = useRef(90);
 
+  // Allow scrolling on this page
+  useEffect(() => {
+    document.documentElement.classList.add("game-scroll");
+    return () => document.documentElement.classList.remove("game-scroll");
+  }, []);
+
   // Keep refs in sync
   useEffect(() => {
     heartsRef.current = hearts;
