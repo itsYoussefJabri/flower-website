@@ -589,6 +589,17 @@ function ShootingGame() {
           </div>
         ))}
 
+        {/* End game button */}
+        <button
+          className="sg-end-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            endGame();
+          }}
+        >
+          ✕ End
+        </button>
+
         {/* Progress bar */}
         <div className="sg-progress-bar">
           <div

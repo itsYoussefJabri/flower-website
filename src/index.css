@@ -1308,6 +1308,38 @@ body {
   }
 }
 
+/* ── End game button ── */
+.sg-end-btn {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 30px;
+  background: rgba(255, 60, 60, 0.12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: rgba(255, 255, 255, 0.7);
+  font-family: "Poppins", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.sg-end-btn:hover {
+  background: rgba(255, 60, 60, 0.25);
+  border-color: rgba(255, 60, 60, 0.35);
+  color: #fff;
+  transform: translateY(-1px);
+}
+.sg-end-btn:active {
+  transform: scale(0.96);
+}
+
 /* ── Progress bar ── */
 .sg-progress-bar {
   position: absolute;
