@@ -9,7 +9,6 @@ import ShootingGame from "./pages/ShootingGame";
 import { useState } from "react";
 
 function App() {
-
   const location = useLocation();
   const isGamePage = location.pathname === "/game";
   const [gamePhase, setGamePhase] = useState(null); // null | name | playing | over
@@ -30,7 +29,10 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/garden" element={<FlowerGarden />} />
           <Route path="/trail" element={<FlowerTrail />} />
-          <Route path="/game" element={<ShootingGame onPhaseChange={setGamePhase} />} />
+          <Route
+            path="/game"
+            element={<ShootingGame onPhaseChange={setGamePhase} />}
+          />
         </Routes>
       </div>
     </>

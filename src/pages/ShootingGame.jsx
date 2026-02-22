@@ -49,12 +49,8 @@ function getDifficulty(elapsed, duration) {
       ? Math.min(1, 0.5 + (t - 0.1) * 1.2)
       : Math.min(0.8, 0.1 + t * 0.7),
     // Movement speed increases
-    speedMin: hard
-      ? 80 + (elapsed - 10) * 2.5
-      : 40 + elapsed * 2,
-    speedMax: hard
-      ? 160 + (elapsed - 10) * 3.5
-      : 90 + elapsed * 2.5,
+    speedMin: hard ? 80 + (elapsed - 10) * 2.5 : 40 + elapsed * 2,
+    speedMax: hard ? 160 + (elapsed - 10) * 3.5 : 90 + elapsed * 2.5,
   };
 }
 
@@ -62,10 +58,10 @@ let targetIdCounter = 0;
 
 function ShootingGame({ onPhaseChange }) {
   const [phase, setPhase] = useState("name"); // name | playing | over
-    // Notify parent of phase changes
-    useEffect(() => {
-      if (onPhaseChange) onPhaseChange(phase);
-    }, [phase, onPhaseChange]);
+  // Notify parent of phase changes
+  useEffect(() => {
+    if (onPhaseChange) onPhaseChange(phase);
+  }, [phase, onPhaseChange]);
   const [playerName, setPlayerName] = useState("");
   const [score, setScore] = useState(0);
   const [hearts, setHearts] = useState(MAX_HEARTS);
