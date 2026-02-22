@@ -1,33 +1,64 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import gsap from "gsap";
 
 function Home() {
   const containerRef = useRef(null);
   const svgContainerRef = useRef(null);
   const animatedRef = useRef(false);
+  const svgTextRef = useRef(null);
+
+  const loadAndAnimateSvg = useCallback(() => {
+    if (animatedRef.current) return;
+
+    const inject = (text) => {
+      if (!svgContainerRef.current || animatedRef.current) return;
+      svgContainerRef.current.innerHTML = text;
+      const svgEl = svgContainerRef.current.querySelector("svg");
+      if (svgEl) {
+        svgEl.removeAttribute("width");
+        svgEl.removeAttribute("height");
+        svgEl.setAttribute("preserveAspectRatio", "xMidYMid slice");
+      }
+      animatedRef.current = true;
+      runAnimation();
+    };
+
+    if (svgTextRef.current) {
+      inject(svgTextRef.current);
+    } else {
+      fetch("/flowers-bg.svg")
+        .then((res) => res.text())
+        .then((text) => {
+          svgTextRef.current = text;
+          inject(text);
+        })
+        .catch((err) => console.log("SVG load error:", err));
+    }
+  }, []);
 
   useEffect(() => {
-    fetch("/flowers-bg.svg")
-      .then((res) => res.text())
-      .then((svgText) => {
-        if (svgContainerRef.current && !animatedRef.current) {
-          svgContainerRef.current.innerHTML = svgText;
-          const svgEl = svgContainerRef.current.querySelector("svg");
-          if (svgEl) {
-            svgEl.removeAttribute("width");
-            svgEl.removeAttribute("height");
-            svgEl.setAttribute("preserveAspectRatio", "xMidYMid slice");
-          }
-          animatedRef.current = true;
-          runAnimation();
-        }
-      })
-      .catch((err) => console.log("SVG load error:", err));
+    const isMobilePortrait = window.matchMedia(
+      "(orientation: portrait) and (max-width: 900px)",
+    );
+
+    // Desktop or already landscape → load immediately
+    if (!isMobilePortrait.matches) {
+      loadAndAnimateSvg();
+    }
+
+    // When orientation changes to landscape, load & animate the SVG
+    const handleOrientation = (e) => {
+      if (!e.matches) {
+        loadAndAnimateSvg();
+      }
+    };
+    isMobilePortrait.addEventListener("change", handleOrientation);
 
     return () => {
+      isMobilePortrait.removeEventListener("change", handleOrientation);
       gsap.killTweensOf("*");
     };
-  }, []);
+  }, [loadAndAnimateSvg]);
 
   function runAnimation() {
     const container = svgContainerRef.current;

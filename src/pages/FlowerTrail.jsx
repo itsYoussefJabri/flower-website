@@ -88,7 +88,9 @@ function FlowerTrail() {
   };
 
   useEffect(() => {
-    const isPortrait = window.matchMedia("(orientation: portrait) and (max-width: 900px)");
+    const isPortrait = window.matchMedia(
+      "(orientation: portrait) and (max-width: 900px)",
+    );
     if (!isPortrait.matches) {
       triggerHint();
     }
@@ -285,9 +287,14 @@ function FlowerTrail() {
   return (
     <div className="canvas-page">
       <canvas ref={canvasRef} />
-      <div className={`page-overlay-text${showHint ? " hint-visible" : " hint-hidden"}`}>Click To Draw Flowers</div>
+      <div
+        className={`page-overlay-text${showHint ? " hint-visible" : " hint-hidden"}`}
+      >
+        Click To Draw Flowers
+      </div>
       <div className="clean-btn" ref={cleanRef}>
-        clean the screen
+        <span className="clean-icon">✦</span>
+        Clean
       </div>
     </div>
   );

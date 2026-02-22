@@ -138,7 +138,9 @@ function FlowerGarden() {
   // On desktop: show immediately on mount
   // On mobile: show after rotating to landscape (orientation change)
   useEffect(() => {
-    const isPortrait = window.matchMedia("(orientation: portrait) and (max-width: 900px)");
+    const isPortrait = window.matchMedia(
+      "(orientation: portrait) and (max-width: 900px)",
+    );
     if (!isPortrait.matches) {
       triggerHint();
     }
@@ -298,9 +300,14 @@ function FlowerGarden() {
   return (
     <div className="canvas-page">
       <canvas ref={canvasRef} />
-      <div className={`page-overlay-text${showHint ? " hint-visible" : " hint-hidden"}`}>Click To Add Flowers</div>
+      <div
+        className={`page-overlay-text${showHint ? " hint-visible" : " hint-hidden"}`}
+      >
+        Click To Add Flowers
+      </div>
       <div className="clean-btn" ref={cleanRef}>
-        clean the screen
+        <span className="clean-icon">✦</span>
+        Clean
       </div>
     </div>
   );
