@@ -21,13 +21,21 @@ const SPLATTER_SHAPES = [
 function getDifficulty(elapsed, duration) {
   const t = elapsed / duration; // 0→1
   return {
-    spawnInterval: Math.max(400, 1200 - elapsed * 8),
-    maxTargets: Math.min(5, 2 + Math.floor(elapsed / 15)),
-    minLifetime: Math.max(600, 1800 - elapsed * 12),
-    maxLifetime: Math.max(1200, 3000 - elapsed * 15),
-    minSize: Math.max(60, 90 - elapsed * 0.3),
-    maxSize: Math.max(80, 130 - elapsed * 0.4),
-    moveChance: Math.min(0.8, 0.2 + t * 0.6),
+    // Start slow (1.4s), ramp to fast (350ms)
+    spawnInterval: Math.max(350, 1400 - elapsed * 12),
+    // Start with 1, ramp up to 6
+    maxTargets: Math.min(6, 1 + Math.floor(elapsed / 10)),
+    // Targets live shorter over time
+    minLifetime: Math.max(500, 2200 - elapsed * 15),
+    maxLifetime: Math.max(900, 3500 - elapsed * 18),
+    // Shrink over time
+    minSize: Math.max(50, 100 - elapsed * 0.4),
+    maxSize: Math.max(70, 140 - elapsed * 0.5),
+    // Start mostly static, end mostly moving
+    moveChance: Math.min(0.9, 0.1 + t * 0.8),
+    // Movement speed increases
+    speedMin: 30 + elapsed * 1.5,
+    speedMax: 70 + elapsed * 2,
   };
 }
 
@@ -118,7 +126,9 @@ function ShootingGame() {
 
     // Random movement direction
     const angle = Math.random() * Math.PI * 2;
-    const speed = moving ? 40 + Math.random() * 80 : 0;
+    const speed = moving
+      ? diff.speedMin + Math.random() * (diff.speedMax - diff.speedMin)
+      : 0;
 
     const newTarget = {
       id,
