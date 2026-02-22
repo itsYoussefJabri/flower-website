@@ -5,6 +5,7 @@ const navItems = [
   { to: "/", label: "Home", icon: "🏠", end: true },
   { to: "/garden", label: "Petal Garden", icon: "🌺" },
   { to: "/trail", label: "Bloom Trail", icon: "🌸" },
+  { to: "/game", label: "Flower Shooter", icon: "🎯" },
 ];
 
 function Navbar() {

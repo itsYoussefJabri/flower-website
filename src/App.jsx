@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import FlowerGarden from "./pages/FlowerGarden";
 import FlowerTrail from "./pages/FlowerTrail";
+import ShootingGame from "./pages/ShootingGame";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/garden" element={<FlowerGarden />} />
           <Route path="/trail" element={<FlowerTrail />} />
+          <Route path="/game" element={<ShootingGame />} />
         </Routes>
       </div>
     </>
