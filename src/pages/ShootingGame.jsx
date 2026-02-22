@@ -20,29 +20,52 @@ const SPLATTER_SHAPES = [
 // Difficulty settings that scale over time
 function getDifficulty(elapsed, duration) {
   const t = elapsed / duration; // 0→1
+  // After 10s, ramp up difficulty much faster
+  const hard = elapsed >= 10;
   return {
-    // Start slow (1.4s), ramp to fast (350ms)
-    spawnInterval: Math.max(350, 1400 - elapsed * 12),
-    // Start with 1, ramp up to 6
-    maxTargets: Math.min(6, 1 + Math.floor(elapsed / 10)),
+    // Faster spawn, more targets after 10s
+    spawnInterval: hard
+      ? Math.max(180, 700 - (elapsed - 10) * 18)
+      : Math.max(350, 1200 - elapsed * 15),
+    maxTargets: hard
+      ? Math.min(10, 3 + Math.floor((elapsed - 10) / 3))
+      : Math.min(3, 1 + Math.floor(elapsed / 7)),
     // Targets live shorter over time
-    minLifetime: Math.max(500, 2200 - elapsed * 15),
-    maxLifetime: Math.max(900, 3500 - elapsed * 18),
+    minLifetime: hard
+      ? Math.max(300, 1200 - (elapsed - 10) * 18)
+      : Math.max(500, 1800 - elapsed * 12),
+    maxLifetime: hard
+      ? Math.max(600, 2200 - (elapsed - 10) * 22)
+      : Math.max(900, 3000 - elapsed * 15),
     // Shrink over time
-    minSize: Math.max(50, 100 - elapsed * 0.4),
-    maxSize: Math.max(70, 140 - elapsed * 0.5),
+    minSize: hard
+      ? Math.max(30, 70 - (elapsed - 10) * 0.7)
+      : Math.max(50, 100 - elapsed * 0.5),
+    maxSize: hard
+      ? Math.max(45, 110 - (elapsed - 10) * 0.8)
+      : Math.max(70, 140 - elapsed * 0.6),
     // Start mostly static, end mostly moving
-    moveChance: Math.min(0.9, 0.1 + t * 0.8),
+    moveChance: hard
+      ? Math.min(1, 0.5 + (t - 0.1) * 1.2)
+      : Math.min(0.8, 0.1 + t * 0.7),
     // Movement speed increases
-    speedMin: 30 + elapsed * 1.5,
-    speedMax: 70 + elapsed * 2,
+    speedMin: hard
+      ? 80 + (elapsed - 10) * 2.5
+      : 40 + elapsed * 2,
+    speedMax: hard
+      ? 160 + (elapsed - 10) * 3.5
+      : 90 + elapsed * 2.5,
   };
 }
 
 let targetIdCounter = 0;
 
-function ShootingGame() {
+function ShootingGame({ onPhaseChange }) {
   const [phase, setPhase] = useState("name"); // name | playing | over
+    // Notify parent of phase changes
+    useEffect(() => {
+      if (onPhaseChange) onPhaseChange(phase);
+    }, [phase, onPhaseChange]);
   const [playerName, setPlayerName] = useState("");
   const [score, setScore] = useState(0);
   const [hearts, setHearts] = useState(MAX_HEARTS);
