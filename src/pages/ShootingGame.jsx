@@ -59,11 +59,15 @@ function ShootingGame() {
   const comboTimerRef = useRef(null);
   const chosenTimeRef = useRef(90);
 
-  // Allow scrolling on this page
+  // Allow scrolling on this page, but disable during gameplay
   useEffect(() => {
-    document.documentElement.classList.add("game-scroll");
+    if (phase === "playing") {
+      document.documentElement.classList.remove("game-scroll");
+    } else {
+      document.documentElement.classList.add("game-scroll");
+    }
     return () => document.documentElement.classList.remove("game-scroll");
-  }, []);
+  }, [phase]);
 
   // Keep refs in sync
   useEffect(() => {
