@@ -75,7 +75,7 @@ function ShootingGame() {
 
   const endGame = useCallback(() => {
     setPhase("over");
-    clearInterval(spawnTimerRef.current);
+    clearTimeout(spawnTimerRef.current);
     clearInterval(gameTimerRef.current);
     setTargets([]);
   }, []);
@@ -139,6 +139,10 @@ function ShootingGame() {
   }, []);
 
   const startGame = useCallback(() => {
+    // Clear any previous game timers
+    clearInterval(gameTimerRef.current);
+    clearTimeout(spawnTimerRef.current);
+
     const chaimaeMode = playerName.trim().toLowerCase() === "chaimae";
     setIsChaimae(chaimaeMode);
     setScore(0);
@@ -161,7 +165,7 @@ function ShootingGame() {
       setTimeLeft((t) => {
         if (t <= 1) {
           clearInterval(gameTimerRef.current);
-          clearInterval(spawnTimerRef.current);
+          clearTimeout(spawnTimerRef.current);
           setTimeout(() => setPhase("over"), 200);
           return 0;
         }
