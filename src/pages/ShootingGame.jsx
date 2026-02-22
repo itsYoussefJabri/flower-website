@@ -81,6 +81,8 @@ function ShootingGame() {
   }, []);
 
   const loseHeart = useCallback(() => {
+    setShakeScreen(true);
+    setTimeout(() => setShakeScreen(false), 400);
     if (isChaimae) return; // unlimited hearts
     setHearts((h) => {
       const next = h - 1;
@@ -90,8 +92,6 @@ function ShootingGame() {
       }
       return next;
     });
-    setShakeScreen(true);
-    setTimeout(() => setShakeScreen(false), 400);
   }, [isChaimae, endGame]);
 
   const spawnTarget = useCallback(() => {
