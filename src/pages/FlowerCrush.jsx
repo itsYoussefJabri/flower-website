@@ -14,24 +14,232 @@ const FLOWERS = [
 
 const SPECIAL_4 = "⭐";
 const SPECIAL_5 = "💎";
-const MOVE_LIMIT = 30;
+
+/* ─── level config ─── wall patterns: array of [r,c] pairs */
+const LEVELS = [
+  { level: 1, label: "Garden Sprout", moves: 30, target: 300, walls: [] },
+  {
+    level: 2,
+    label: "Petal Path",
+    moves: 28,
+    target: 500,
+    walls: [
+      [3, 3],
+      [3, 4],
+      [4, 3],
+      [4, 4],
+    ],
+  },
+  {
+    level: 3,
+    label: "Blossom Field",
+    moves: 26,
+    target: 700,
+    walls: [
+      [0, 0],
+      [0, 7],
+      [7, 0],
+      [7, 7],
+      [3, 3],
+      [4, 4],
+    ],
+  },
+  {
+    level: 4,
+    label: "Rose Maze",
+    moves: 25,
+    target: 900,
+    walls: [
+      [1, 1],
+      [1, 6],
+      [6, 1],
+      [6, 6],
+      [3, 0],
+      [3, 7],
+      [4, 0],
+      [4, 7],
+    ],
+  },
+  {
+    level: 5,
+    label: "Sunflower Valley",
+    moves: 24,
+    target: 1100,
+    walls: [
+      [0, 3],
+      [0, 4],
+      [7, 3],
+      [7, 4],
+      [3, 0],
+      [4, 0],
+      [3, 7],
+      [4, 7],
+      [3, 3],
+      [4, 4],
+    ],
+  },
+  {
+    level: 6,
+    label: "Wildflower Storm",
+    moves: 23,
+    target: 1300,
+    walls: [
+      [0, 0],
+      [0, 1],
+      [0, 6],
+      [0, 7],
+      [7, 0],
+      [7, 1],
+      [7, 6],
+      [7, 7],
+      [3, 3],
+      [3, 4],
+      [4, 3],
+      [4, 4],
+    ],
+  },
+  {
+    level: 7,
+    label: "Enchanted Grove",
+    moves: 22,
+    target: 1500,
+    walls: [
+      [1, 0],
+      [2, 0],
+      [5, 0],
+      [6, 0],
+      [1, 7],
+      [2, 7],
+      [5, 7],
+      [6, 7],
+      [0, 3],
+      [0, 4],
+      [7, 3],
+      [7, 4],
+      [3, 3],
+      [4, 4],
+    ],
+  },
+  {
+    level: 8,
+    label: "Mystic Bloom",
+    moves: 20,
+    target: 1800,
+    walls: [
+      [0, 0],
+      [0, 1],
+      [0, 6],
+      [0, 7],
+      [1, 0],
+      [1, 7],
+      [6, 0],
+      [6, 7],
+      [7, 0],
+      [7, 1],
+      [7, 6],
+      [7, 7],
+      [2, 2],
+      [2, 5],
+      [5, 2],
+      [5, 5],
+    ],
+  },
+  {
+    level: 9,
+    label: "Flower Tempest",
+    moves: 18,
+    target: 2200,
+    walls: [
+      [0, 0],
+      [0, 1],
+      [0, 2],
+      [0, 5],
+      [0, 6],
+      [0, 7],
+      [1, 0],
+      [1, 7],
+      [2, 0],
+      [2, 7],
+      [5, 0],
+      [5, 7],
+      [6, 0],
+      [6, 7],
+      [7, 0],
+      [7, 1],
+      [7, 2],
+      [7, 5],
+      [7, 6],
+      [7, 7],
+    ],
+  },
+  {
+    level: 10,
+    label: "Eternal Garden",
+    moves: 16,
+    target: 2500,
+    walls: [
+      [0, 0],
+      [0, 1],
+      [0, 2],
+      [0, 5],
+      [0, 6],
+      [0, 7],
+      [1, 0],
+      [1, 1],
+      [1, 6],
+      [1, 7],
+      [2, 0],
+      [2, 7],
+      [5, 0],
+      [5, 7],
+      [6, 0],
+      [6, 1],
+      [6, 6],
+      [6, 7],
+      [7, 0],
+      [7, 1],
+      [7, 2],
+      [7, 5],
+      [7, 6],
+      [7, 7],
+    ],
+  },
+];
+
+function getWallSet(levelNum) {
+  const cfg = LEVELS[levelNum - 1] || LEVELS[0];
+  const s = new Set();
+  for (const [r, c] of cfg.walls) s.add(`${r},${c}`);
+  return s;
+}
 
 /* ─── helpers ─── */
-const randFlower = () => Math.floor(Math.random() * FLOWERS.length);
+const WALL_CELL = { type: -1, key: "wall", special: "wall" };
+const randFlower = (count = FLOWERS.length) =>
+  Math.floor(Math.random() * count);
 
-function createBoard() {
-  const b = Array.from({ length: ROWS }, () =>
-    Array.from({ length: COLS }, () => ({
-      type: randFlower(),
-      key: Math.random(),
-      special: null,
-    })),
+function createBoard(flowerCount = FLOWERS.length, wallSet = new Set()) {
+  const b = Array.from({ length: ROWS }, (_, r) =>
+    Array.from({ length: COLS }, (_, c) => {
+      if (wallSet.has(`${r},${c}`))
+        return { ...WALL_CELL, key: `wall-${r}-${c}` };
+      return {
+        type: randFlower(flowerCount),
+        key: Math.random(),
+        special: null,
+      };
+    }),
   );
-  // Remove initial matches
+  // Remove initial matches (skip walls)
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
+      if (b[r][c].special === "wall") continue;
       while (hasMatchAt(b, r, c)) {
-        b[r][c] = { type: randFlower(), key: Math.random(), special: null };
+        b[r][c] = {
+          type: randFlower(flowerCount),
+          key: Math.random(),
+          special: null,
+        };
       }
     }
   }
@@ -39,12 +247,25 @@ function createBoard() {
 }
 
 function hasMatchAt(board, r, c) {
+  if (board[r][c].special === "wall" || board[r][c].type < 0) return false;
   const t = board[r][c].type;
   // Horizontal
-  if (c >= 2 && board[r][c - 1].type === t && board[r][c - 2].type === t)
+  if (
+    c >= 2 &&
+    board[r][c - 1].type === t &&
+    board[r][c - 1].special !== "wall" &&
+    board[r][c - 2].type === t &&
+    board[r][c - 2].special !== "wall"
+  )
     return true;
   // Vertical
-  if (r >= 2 && board[r - 1][c].type === t && board[r - 2][c].type === t)
+  if (
+    r >= 2 &&
+    board[r - 1][c].type === t &&
+    board[r - 1][c].special !== "wall" &&
+    board[r - 2][c].type === t &&
+    board[r - 2][c].special !== "wall"
+  )
     return true;
   return false;
 }
@@ -57,12 +278,23 @@ function findAllMatches(board) {
   for (let r = 0; r < ROWS; r++) {
     let start = 0;
     for (let c = 1; c <= COLS; c++) {
-      if (c < COLS && board[r][c].type === board[r][start].type) continue;
-      const len = c - start;
-      if (len >= 3) {
-        for (let i = start; i < c; i++) matched.add(`${r},${i}`);
-        if (len === 4) specials.push({ r, c: start + 1, kind: "star" });
-        if (len >= 5) specials.push({ r, c: start + 2, kind: "diamond" });
+      const startIsWall = board[r][start]?.special === "wall";
+      const curIsWall = c < COLS && board[r][c]?.special === "wall";
+      if (
+        c < COLS &&
+        !startIsWall &&
+        !curIsWall &&
+        board[r][c].type === board[r][start].type &&
+        board[r][c].type >= 0
+      )
+        continue;
+      if (!startIsWall) {
+        const len = c - start;
+        if (len >= 3) {
+          for (let i = start; i < c; i++) matched.add(`${r},${i}`);
+          if (len === 4) specials.push({ r, c: start + 1, kind: "star" });
+          if (len >= 5) specials.push({ r, c: start + 2, kind: "diamond" });
+        }
       }
       start = c;
     }
@@ -71,12 +303,23 @@ function findAllMatches(board) {
   for (let c = 0; c < COLS; c++) {
     let start = 0;
     for (let r = 1; r <= ROWS; r++) {
-      if (r < ROWS && board[r][c].type === board[start][c].type) continue;
-      const len = r - start;
-      if (len >= 3) {
-        for (let i = start; i < r; i++) matched.add(`${i},${c}`);
-        if (len === 4) specials.push({ r: start + 1, c, kind: "star" });
-        if (len >= 5) specials.push({ r: start + 2, c, kind: "diamond" });
+      const startIsWall = board[start][c]?.special === "wall";
+      const curIsWall = r < ROWS && board[r][c]?.special === "wall";
+      if (
+        r < ROWS &&
+        !startIsWall &&
+        !curIsWall &&
+        board[r][c].type === board[start][c].type &&
+        board[r][c].type >= 0
+      )
+        continue;
+      if (!startIsWall) {
+        const len = r - start;
+        if (len >= 3) {
+          for (let i = start; i < r; i++) matched.add(`${i},${c}`);
+          if (len === 4) specials.push({ r: start + 1, c, kind: "star" });
+          if (len >= 5) specials.push({ r: start + 2, c, kind: "diamond" });
+        }
       }
       start = r;
     }
@@ -98,14 +341,15 @@ function copyBoard(b) {
 function hasAnyValidMove(board) {
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
+      if (board[r][c]?.special === "wall") continue;
       // Try swap right
-      if (c < COLS - 1) {
+      if (c < COLS - 1 && board[r][c + 1]?.special !== "wall") {
         const nb = copyBoard(board);
         [nb[r][c], nb[r][c + 1]] = [nb[r][c + 1], nb[r][c]];
         if (findAllMatches(nb).matched.size > 0) return true;
       }
       // Try swap down
-      if (r < ROWS - 1) {
+      if (r < ROWS - 1 && board[r + 1][c]?.special !== "wall") {
         const nb = copyBoard(board);
         [nb[r][c], nb[r + 1][c]] = [nb[r + 1][c], nb[r][c]];
         if (findAllMatches(nb).matched.size > 0) return true;
@@ -117,11 +361,19 @@ function hasAnyValidMove(board) {
 
 /* ─── Component ─── */
 function FlowerCrush() {
-  const [phase, setPhase] = useState("menu"); // menu | playing | over
+  const [phase, setPhase] = useState("menu"); // menu | levels | playing | levelComplete | continue | over
+  const [currentLevel, setCurrentLevel] = useState(1);
+  const [unlockedLevel, setUnlockedLevel] = useState(() => {
+    try {
+      return parseInt(localStorage.getItem("fc_unlocked") || "1", 10);
+    } catch {
+      return 1;
+    }
+  });
   const [board, setBoard] = useState([]);
   const [selected, setSelected] = useState(null);
   const [score, setScore] = useState(0);
-  const [moves, setMoves] = useState(MOVE_LIMIT);
+  const [moves, setMoves] = useState(35);
   const [combo, setCombo] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [matched, setMatched] = useState(new Set());
@@ -145,12 +397,16 @@ function FlowerCrush() {
   const hintTimer = useRef(null);
   const idleTimer = useRef(null);
 
-  const startGame = useCallback(() => {
-    const b = createBoard();
+  const lvl = LEVELS[currentLevel - 1] || LEVELS[0];
+
+  const startLevel = useCallback((lvlNum) => {
+    const cfg = LEVELS[lvlNum - 1] || LEVELS[0];
+    setCurrentLevel(lvlNum);
+    const b = createBoard(FLOWERS.length, getWallSet(lvlNum));
     setBoard(b);
     setSelected(null);
     setScore(0);
-    setMoves(MOVE_LIMIT);
+    setMoves(cfg.moves);
     setCombo(0);
     setAnimating(false);
     setMatched(new Set());
@@ -166,148 +422,180 @@ function FlowerCrush() {
   }, []);
 
   /* ── Process matches with cascade ── */
-  const processMatches = useCallback((currentBoard, currentCombo = 0) => {
-    const { matched: m, specials } = findAllMatches(currentBoard);
-    if (m.size === 0) {
-      setAnimating(false);
-      setCombo(0);
-      // Check for valid moves
-      if (!hasAnyValidMove(currentBoard)) {
-        // Shuffle board
-        const newBoard = createBoard();
-        setBoard(newBoard);
-      }
-      return;
-    }
-
-    const newCombo = currentCombo + 1;
-    setCombo(newCombo);
-    setMatched(m);
-
-    // Calculate score
-    const pts = m.size * 10 * newCombo;
-    setScore((s) => {
-      const next = s + pts;
-      setBestScore((b) => {
-        const nb = Math.max(b, next);
-        try {
-          localStorage.setItem("fc_best", String(nb));
-        } catch {}
-        return nb;
-      });
-      return next;
-    });
-
-    // Score popup
-    const cells = [...m].map((k) => {
-      const [r, c] = k.split(",").map(Number);
-      return { r, c };
-    });
-    const avgR = cells.reduce((a, c) => a + c.r, 0) / cells.length;
-    const avgC = cells.reduce((a, c) => a + c.c, 0) / cells.length;
-    setScorePopups((prev) => [
-      ...prev,
-      {
-        id: Date.now() + Math.random(),
-        text: `+${pts}${newCombo > 1 ? ` x${newCombo}` : ""}`,
-        r: avgR,
-        c: avgC,
-      },
-    ]);
-    setTimeout(
-      () => setScorePopups((prev) => (prev.length > 0 ? prev.slice(1) : prev)),
-      900,
-    );
-
-    // Spawn particles
-    cells.forEach((cell) => {
-      for (let i = 0; i < 3; i++) {
-        setParticles((prev) => [
-          ...prev,
-          {
-            id: Date.now() + Math.random(),
-            x: cell.c,
-            y: cell.r,
-            emoji: FLOWERS[currentBoard[cell.r][cell.c].type]?.emoji || "✨",
-          },
-        ]);
-      }
-    });
-    setTimeout(
-      () => setParticles((prev) => (prev.length > 6 ? prev.slice(3) : [])),
-      700,
-    );
-
-    // After showing matched animation, collapse
-    setTimeout(() => {
-      const newBoard = copyBoard(currentBoard);
-
-      // Apply specials
-      for (const sp of specials) {
-        if (!m.has(`${sp.r},${sp.c}`)) continue;
-        newBoard[sp.r][sp.c] = {
-          type: currentBoard[sp.r][sp.c].type,
-          key: Math.random(),
-          special: sp.kind,
-        };
-        m.delete(`${sp.r},${sp.c}`);
-      }
-
-      // Handle special tile explosions
-      const toRemove = new Set(m);
-      for (const key of m) {
-        const [r, c] = key.split(",").map(Number);
-        const cell = currentBoard[r][c];
-        if (cell.special === "star") {
-          // Clear row
-          for (let cc = 0; cc < COLS; cc++) toRemove.add(`${r},${cc}`);
-        } else if (cell.special === "diamond") {
-          // Clear all of same type
-          for (let rr = 0; rr < ROWS; rr++)
-            for (let cc = 0; cc < COLS; cc++)
-              if (newBoard[rr][cc].type === cell.type)
-                toRemove.add(`${rr},${cc}`);
+  const processMatches = useCallback(
+    (currentBoard, currentCombo = 0) => {
+      const { matched: m, specials } = findAllMatches(currentBoard);
+      if (m.size === 0) {
+        setAnimating(false);
+        setCombo(0);
+        // Check for valid moves
+        if (!hasAnyValidMove(currentBoard)) {
+          // Shuffle board
+          const newBoard = createBoard(
+            FLOWERS.length,
+            getWallSet(currentLevel),
+          );
+          setBoard(newBoard);
         }
+        return;
       }
 
-      // Remove matched cells
-      for (const key of toRemove) {
-        const [r, c] = key.split(",").map(Number);
-        newBoard[r][c] = null;
-      }
+      const newCombo = currentCombo + 1;
+      setCombo(newCombo);
+      setMatched(m);
 
-      // Gravity
-      for (let c = 0; c < COLS; c++) {
-        let writeRow = ROWS - 1;
-        for (let r = ROWS - 1; r >= 0; r--) {
-          if (newBoard[r][c] !== null) {
-            if (writeRow !== r) {
-              newBoard[writeRow][c] = newBoard[r][c];
-              newBoard[r][c] = null;
+      // Calculate score
+      const pts = m.size * 10 * newCombo;
+      setScore((s) => {
+        const next = s + pts;
+        setBestScore((b) => {
+          const nb = Math.max(b, next);
+          try {
+            localStorage.setItem("fc_best", String(nb));
+          } catch {}
+          return nb;
+        });
+        // Check level target
+        const cfg = LEVELS[currentLevel - 1] || LEVELS[0];
+        if (next >= cfg.target) {
+          setTimeout(() => {
+            const newUnlocked = Math.min(currentLevel + 1, LEVELS.length);
+            setUnlockedLevel((prev) => {
+              const u = Math.max(prev, newUnlocked);
+              try {
+                localStorage.setItem("fc_unlocked", String(u));
+              } catch {}
+              return u;
+            });
+            setPhase("levelComplete");
+          }, 600);
+        }
+        return next;
+      });
+
+      // Score popup
+      const cells = [...m].map((k) => {
+        const [r, c] = k.split(",").map(Number);
+        return { r, c };
+      });
+      const avgR = cells.reduce((a, c) => a + c.r, 0) / cells.length;
+      const avgC = cells.reduce((a, c) => a + c.c, 0) / cells.length;
+      setScorePopups((prev) => [
+        ...prev,
+        {
+          id: Date.now() + Math.random(),
+          text: `+${pts}${newCombo > 1 ? ` x${newCombo}` : ""}`,
+          r: avgR,
+          c: avgC,
+        },
+      ]);
+      setTimeout(
+        () =>
+          setScorePopups((prev) => (prev.length > 0 ? prev.slice(1) : prev)),
+        900,
+      );
+
+      // Spawn particles
+      cells.forEach((cell) => {
+        for (let i = 0; i < 3; i++) {
+          setParticles((prev) => [
+            ...prev,
+            {
+              id: Date.now() + Math.random(),
+              x: cell.c,
+              y: cell.r,
+              emoji: FLOWERS[currentBoard[cell.r][cell.c].type]?.emoji || "✨",
+            },
+          ]);
+        }
+      });
+      setTimeout(
+        () => setParticles((prev) => (prev.length > 6 ? prev.slice(3) : [])),
+        700,
+      );
+
+      // After showing matched animation, collapse
+      setTimeout(() => {
+        const newBoard = copyBoard(currentBoard);
+
+        // Apply specials
+        for (const sp of specials) {
+          if (!m.has(`${sp.r},${sp.c}`)) continue;
+          newBoard[sp.r][sp.c] = {
+            type: currentBoard[sp.r][sp.c].type,
+            key: Math.random(),
+            special: sp.kind,
+          };
+          m.delete(`${sp.r},${sp.c}`);
+        }
+
+        // Handle special tile explosions
+        const toRemove = new Set(m);
+        for (const key of m) {
+          const [r, c] = key.split(",").map(Number);
+          const cell = currentBoard[r][c];
+          if (cell.special === "star") {
+            // Clear row
+            for (let cc = 0; cc < COLS; cc++) {
+              if (newBoard[r][cc]?.special !== "wall")
+                toRemove.add(`${r},${cc}`);
             }
-            writeRow--;
+          } else if (cell.special === "diamond") {
+            // Clear all of same type
+            for (let rr = 0; rr < ROWS; rr++)
+              for (let cc = 0; cc < COLS; cc++)
+                if (
+                  newBoard[rr][cc].type === cell.type &&
+                  newBoard[rr][cc].special !== "wall"
+                )
+                  toRemove.add(`${rr},${cc}`);
           }
         }
-        // Fill empty top
-        for (let r = writeRow; r >= 0; r--) {
-          newBoard[r][c] = {
-            type: randFlower(),
-            key: Math.random(),
-            special: null,
-            dropping: true,
-          };
+
+        // Remove matched cells (never remove walls)
+        for (const key of toRemove) {
+          const [r, c] = key.split(",").map(Number);
+          if (newBoard[r][c]?.special === "wall") continue;
+          newBoard[r][c] = null;
         }
-      }
 
-      setBoard(newBoard);
-      setMatched(new Set());
+        // Gravity (skip walls — they stay in place)
+        const wallSet = getWallSet(currentLevel);
+        for (let c = 0; c < COLS; c++) {
+          // Collect non-wall, non-null cells from bottom up
+          const pieces = [];
+          for (let r = ROWS - 1; r >= 0; r--) {
+            if (wallSet.has(`${r},${c}`)) continue;
+            if (newBoard[r][c] !== null) pieces.push(newBoard[r][c]);
+          }
+          // Place them back, skipping wall positions, from bottom up
+          let idx = 0;
+          for (let r = ROWS - 1; r >= 0; r--) {
+            if (wallSet.has(`${r},${c}`)) continue;
+            if (idx < pieces.length) {
+              newBoard[r][c] = pieces[idx++];
+            } else {
+              newBoard[r][c] = {
+                type: randFlower(FLOWERS.length),
+                key: Math.random(),
+                special: null,
+                dropping: true,
+              };
+            }
+          }
+        }
 
-      // Check for cascading matches
-      setTimeout(() => {
-        processMatches(newBoard, newCombo);
-      }, 300);
-    }, 400);
-  }, []);
+        setBoard(newBoard);
+        setMatched(new Set());
+
+        // Check for cascading matches
+        setTimeout(() => {
+          processMatches(newBoard, newCombo);
+        }, 300);
+      }, 400);
+    },
+    [currentLevel],
+  );
 
   /* ── Show hint on board (shared logic) ── */
   const showHintOnBoard = useCallback(
@@ -315,7 +603,8 @@ function FlowerCrush() {
       if (animating || phase !== "playing") return;
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
-          if (c < COLS - 1) {
+          if (board[r][c]?.special === "wall") continue;
+          if (c < COLS - 1 && board[r][c + 1]?.special !== "wall") {
             const nb = copyBoard(board);
             [nb[r][c], nb[r][c + 1]] = [nb[r][c + 1], nb[r][c]];
             if (findAllMatches(nb).matched.size > 0) {
@@ -326,7 +615,7 @@ function FlowerCrush() {
               return;
             }
           }
-          if (r < ROWS - 1) {
+          if (r < ROWS - 1 && board[r + 1]?.[c]?.special !== "wall") {
             const nb = copyBoard(board);
             [nb[r][c], nb[r + 1][c]] = [nb[r + 1][c], nb[r][c]];
             if (findAllMatches(nb).matched.size > 0) {
@@ -389,10 +678,16 @@ function FlowerCrush() {
             const isHorizontalSwap = from.r === to.r;
             if (isHorizontalSwap) {
               // Clear row
-              for (let cc = 0; cc < COLS; cc++) toRemove.add(`${sr},${cc}`);
+              for (let cc = 0; cc < COLS; cc++) {
+                if (newBoard[sr][cc]?.special !== "wall")
+                  toRemove.add(`${sr},${cc}`);
+              }
             } else {
               // Clear column
-              for (let rr = 0; rr < ROWS; rr++) toRemove.add(`${rr},${sc}`);
+              for (let rr = 0; rr < ROWS; rr++) {
+                if (newBoard[rr][sc]?.special !== "wall")
+                  toRemove.add(`${rr},${sc}`);
+              }
             }
           };
 
@@ -402,7 +697,10 @@ function FlowerCrush() {
             if (targetType == null) return;
             for (let rr = 0; rr < ROWS; rr++)
               for (let cc = 0; cc < COLS; cc++)
-                if (newBoard[rr][cc]?.type === targetType)
+                if (
+                  newBoard[rr][cc]?.type === targetType &&
+                  newBoard[rr][cc]?.special !== "wall"
+                )
                   toRemove.add(`${rr},${cc}`);
           };
 
@@ -421,7 +719,9 @@ function FlowerCrush() {
             const next = s + pts;
             setBestScore((b) => {
               const nb = Math.max(b, next);
-              try { localStorage.setItem("fc_best", String(nb)); } catch {}
+              try {
+                localStorage.setItem("fc_best", String(nb));
+              } catch {}
               return nb;
             });
             return next;
@@ -430,9 +730,20 @@ function FlowerCrush() {
           // Score popup
           setScorePopups((prev) => [
             ...prev,
-            { id: Date.now() + Math.random(), text: `+${pts} 💥`, r: from.r, c: from.c },
+            {
+              id: Date.now() + Math.random(),
+              text: `+${pts} 💥`,
+              r: from.r,
+              c: from.c,
+            },
           ]);
-          setTimeout(() => setScorePopups((prev) => prev.length > 0 ? prev.slice(1) : prev), 900);
+          setTimeout(
+            () =>
+              setScorePopups((prev) =>
+                prev.length > 0 ? prev.slice(1) : prev,
+              ),
+            900,
+          );
 
           setMatched(toRemove);
           setSwapping(null);
@@ -455,23 +766,31 @@ function FlowerCrush() {
           setTimeout(() => {
             for (const key of toRemove) {
               const [r, c] = key.split(",").map(Number);
+              if (newBoard[r][c]?.special === "wall") continue;
               newBoard[r][c] = null;
             }
 
-            // Gravity
+            // Gravity (skip walls)
+            const wallSet = getWallSet(currentLevel);
             for (let c = 0; c < COLS; c++) {
-              let writeRow = ROWS - 1;
+              const pieces = [];
               for (let r = ROWS - 1; r >= 0; r--) {
-                if (newBoard[r][c] !== null) {
-                  if (writeRow !== r) {
-                    newBoard[writeRow][c] = newBoard[r][c];
-                    newBoard[r][c] = null;
-                  }
-                  writeRow--;
-                }
+                if (wallSet.has(`${r},${c}`)) continue;
+                if (newBoard[r][c] !== null) pieces.push(newBoard[r][c]);
               }
-              for (let r = writeRow; r >= 0; r--) {
-                newBoard[r][c] = { type: randFlower(), key: Math.random(), special: null, dropping: true };
+              let idx = 0;
+              for (let r = ROWS - 1; r >= 0; r--) {
+                if (wallSet.has(`${r},${c}`)) continue;
+                if (idx < pieces.length) {
+                  newBoard[r][c] = pieces[idx++];
+                } else {
+                  newBoard[r][c] = {
+                    type: randFlower(FLOWERS.length),
+                    key: Math.random(),
+                    special: null,
+                    dropping: true,
+                  };
+                }
               }
             }
 
@@ -528,6 +847,7 @@ function FlowerCrush() {
   const handleCellClick = useCallback(
     (r, c) => {
       if (phase !== "playing" || animating) return;
+      if (board[r]?.[c]?.special === "wall") return;
       resetIdleTimer();
       setHint(null);
 
@@ -541,13 +861,14 @@ function FlowerCrush() {
         setSelected({ r, c });
       }
     },
-    [phase, animating, selected, trySwap, resetIdleTimer],
+    [phase, animating, selected, trySwap, resetIdleTimer, board],
   );
 
   /* ── Touch/drag swap ── */
   const dragStart = useRef(null);
   const handleTouchStart = (r, c, e) => {
     if (phase !== "playing" || animating) return;
+    if (board[r]?.[c]?.special === "wall") return;
     const touch = e.touches?.[0] || e;
     dragStart.current = { r, c, x: touch.clientX, y: touch.clientY };
   };
@@ -582,12 +903,12 @@ function FlowerCrush() {
   /* ── Shuffle board ── */
   const shuffleBoard = useCallback(() => {
     if (animating || shufflesLeft <= 0 || phase !== "playing") return;
-    const newBoard = createBoard();
+    const newBoard = createBoard(FLOWERS.length, getWallSet(currentLevel));
     setBoard(newBoard);
     setShufflesLeft((s) => s - 1);
     setHint(null);
     setSelected(null);
-  }, [animating, shufflesLeft, phase]);
+  }, [animating, shufflesLeft, phase, currentLevel]);
 
   /* ── Add extra moves ── */
   const addExtraMoves = useCallback(() => {
@@ -626,7 +947,7 @@ function FlowerCrush() {
                 <span>3️⃣</span> Match 3+ same flowers
               </div>
               <div className="fc-rule">
-                <span>⭐</span> Match 4 = Star (clears row)
+                <span>⭐</span> Match 4 = Star (clears row/col)
               </div>
               <div className="fc-rule">
                 <span>💎</span> Match 5 = Diamond (clears color)
@@ -636,9 +957,9 @@ function FlowerCrush() {
               </div>
             </div>
             {bestScore > 0 && <p className="fc-best">🏆 Best: {bestScore}</p>}
-            <button className="fc-start-btn" onClick={startGame}>
+            <button className="fc-start-btn" onClick={() => setPhase("levels")}>
               <span className="fc-btn-icon">🌸</span>
-              Start Crushing!
+              Play Levels
             </button>
           </div>
           <div className="fc-floating">
@@ -662,16 +983,65 @@ function FlowerCrush() {
     );
   }
 
-  /* ─── GAME OVER ─── */
+  /* ─── LEVEL SELECT ─── */
+  if (phase === "levels") {
+    return (
+      <div className="fc-page">
+        <div className="fc-menu-screen">
+          <div className="fc-menu-card fc-levels-card">
+            <div className="fc-deco">🌺</div>
+            <h1 className="fc-title">Select Level</h1>
+            <div className="fc-level-grid">
+              {LEVELS.map((lv) => {
+                const locked = lv.level > unlockedLevel;
+                return (
+                  <button
+                    key={lv.level}
+                    className={`fc-level-btn${locked ? " fc-level-locked" : ""}${lv.level === unlockedLevel ? " fc-level-current" : ""}`}
+                    onClick={() => !locked && startLevel(lv.level)}
+                    disabled={locked}
+                    title={
+                      locked
+                        ? "Locked"
+                        : `${lv.label} — ${lv.walls.length} walls`
+                    }
+                  >
+                    <span className="fc-level-num">
+                      {locked ? "🔒" : lv.level}
+                    </span>
+                    <span className="fc-level-name">{lv.label}</span>
+                    <span className="fc-level-info">
+                      {locked
+                        ? ""
+                        : lv.walls.length > 0
+                          ? `🧱 ${lv.walls.length}`
+                          : "🌿 Free"}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <button className="fc-back-btn" onClick={() => setPhase("menu")}>
+              Back
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ─── GAME OVER (failed level) ─── */
   if (phase === "over") {
     return (
       <div className="fc-page">
         <div className="fc-menu-screen">
           <div className="fc-menu-card">
-            <div className="fc-deco">{score >= bestScore ? "🏆" : "🌸"}</div>
-            <h1 className="fc-title">
-              {score >= bestScore ? "New Best!" : "Game Over"}
-            </h1>
+            <div className="fc-deco">🌸</div>
+            <h1 className="fc-title">Level {currentLevel} Failed</h1>
+            <p className="fc-sub">
+              Target: <strong style={{ color: "#f5a6c0" }}>{lvl.target}</strong>{" "}
+              — You scored: <strong style={{ color: "#fff" }}>{score}</strong>
+            </p>
             <div className="fc-stats">
               <div className="fc-stat">
                 <span className="fc-stat-icon">⭐</span>
@@ -679,18 +1049,80 @@ function FlowerCrush() {
                 <span className="fc-stat-label">Score</span>
               </div>
               <div className="fc-stat">
-                <span className="fc-stat-icon">🏆</span>
-                <span className="fc-stat-val">{bestScore}</span>
-                <span className="fc-stat-label">Best</span>
+                <span className="fc-stat-icon">🎯</span>
+                <span className="fc-stat-val">{lvl.target}</span>
+                <span className="fc-stat-label">Target</span>
               </div>
             </div>
             <div className="fc-over-actions">
-              <button className="fc-start-btn" onClick={startGame}>
+              <button
+                className="fc-start-btn"
+                onClick={() => startLevel(currentLevel)}
+              >
                 <span className="fc-btn-icon">🔄</span>
-                Play Again
+                Retry Level {currentLevel}
               </button>
-              <button className="fc-back-btn" onClick={() => setPhase("menu")}>
-                Menu
+              <button
+                className="fc-back-btn"
+                onClick={() => setPhase("levels")}
+              >
+                Levels
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ─── LEVEL COMPLETE ─── */
+  if (phase === "levelComplete") {
+    const isLastLevel = currentLevel >= LEVELS.length;
+    return (
+      <div className="fc-page">
+        <div className="fc-menu-screen">
+          <div className="fc-menu-card">
+            <div className="fc-deco">🏆</div>
+            <h1 className="fc-title">
+              {isLastLevel
+                ? "You Beat All Levels!"
+                : `Level ${currentLevel} Complete!`}
+            </h1>
+            <p className="fc-sub">{lvl.label}</p>
+            <div className="fc-stats">
+              <div className="fc-stat">
+                <span className="fc-stat-icon">⭐</span>
+                <span className="fc-stat-val">{score}</span>
+                <span className="fc-stat-label">Score</span>
+              </div>
+              <div className="fc-stat">
+                <span className="fc-stat-icon">🎯</span>
+                <span className="fc-stat-val">{lvl.target}</span>
+                <span className="fc-stat-label">Target</span>
+              </div>
+            </div>
+            <div className="fc-over-actions">
+              {!isLastLevel && (
+                <button
+                  className="fc-start-btn fc-continue-btn"
+                  onClick={() => startLevel(currentLevel + 1)}
+                >
+                  <span className="fc-btn-icon">▶️</span>
+                  Next Level
+                </button>
+              )}
+              <button
+                className="fc-start-btn"
+                onClick={() => startLevel(currentLevel)}
+              >
+                <span className="fc-btn-icon">🔄</span>
+                Replay
+              </button>
+              <button
+                className="fc-back-btn"
+                onClick={() => setPhase("levels")}
+              >
+                Levels
               </button>
             </div>
           </div>
@@ -742,8 +1174,11 @@ function FlowerCrush() {
         {/* HUD */}
         <div className="fc-hud">
           <div className="fc-hud-item">
-            <span className="fc-hud-label">Score</span>
-            <span className="fc-hud-val">{score}</span>
+            <span className="fc-hud-label">Level {currentLevel}</span>
+            <span className="fc-hud-val">
+              {score}
+              <span className="fc-hud-target">/{lvl.target}</span>
+            </span>
           </div>
           <div className="fc-hud-item">
             <span className="fc-hud-label">Moves</span>
@@ -804,6 +1239,18 @@ function FlowerCrush() {
           {board.map((row, r) =>
             row.map((cell, c) => {
               if (!cell) return null;
+
+              // Wall cell — empty inactive square
+              if (cell.special === "wall") {
+                return (
+                  <div
+                    key={cell.key}
+                    className="fc-cell fc-wall"
+                    style={{ gridRow: r + 1, gridColumn: c + 1 }}
+                  />
+                );
+              }
+
               const isSelected =
                 selected && selected.r === r && selected.c === c;
               const isMatched = matched.has(`${r},${c}`);
