@@ -6,11 +6,13 @@ import Home from "./pages/Home";
 import FlowerGarden from "./pages/FlowerGarden";
 import FlowerTrail from "./pages/FlowerTrail";
 import ShootingGame from "./pages/ShootingGame";
+import FlowerCrush from "./pages/FlowerCrush";
 import { useState } from "react";
 
 function App() {
   const location = useLocation();
-  const isGamePage = location.pathname === "/game";
+  const gamePaths = ["/game", "/crush"];
+  const isGamePage = gamePaths.includes(location.pathname);
   const [gamePhase, setGamePhase] = useState(null); // null | name | playing | over
 
   // Hide navbar only during gameplay phase
@@ -33,6 +35,7 @@ function App() {
             path="/game"
             element={<ShootingGame onPhaseChange={setGamePhase} />}
           />
+          <Route path="/crush" element={<FlowerCrush />} />
         </Routes>
       </div>
     </>

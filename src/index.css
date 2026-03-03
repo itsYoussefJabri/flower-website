@@ -1463,3 +1463,477 @@ body {
     font-size: 0.75rem;
   }
 }
+
+/* ═══════════════════════════════════════════
+   FLOWER CRUSH (Candy Crush style)
+   ═══════════════════════════════════════════ */
+.fc-page {
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+  overflow: auto;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(80, 20, 60, 0.45) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(60, 15, 70, 0.35) 0%, transparent 50%),
+    linear-gradient(160deg, #0d0515 0%, #1a0a20 40%, #12081a 100%);
+}
+/* ── Menu ── */
+.fc-menu-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 100vh;
+  padding: 20px;
+  position: relative;
+}
+.fc-menu-card {
+  position: relative;
+  z-index: 2;
+  max-width: 460px;
+  width: 100%;
+  padding: 44px 34px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(30px) saturate(160%);
+  -webkit-backdrop-filter: blur(30px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.4),
+    0 0 0 0.5px rgba(255, 255, 255, 0.05) inset,
+    0 0 80px rgba(245, 166, 192, 0.05);
+  text-align: center;
+}
+.fc-deco {
+  font-size: 3.2rem;
+  margin-bottom: 8px;
+  animation: fcBounce 2s ease-in-out infinite;
+}
+@keyframes fcBounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10px) scale(1.08); }
+}
+.fc-title {
+  font-family: "Playfair Display", serif;
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #fff 0%, rgba(245, 166, 192, 0.9) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 10px;
+}
+.fc-sub {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  margin-bottom: 22px;
+}
+.fc-rules {
+  text-align: left;
+  margin: 0 auto 24px;
+  max-width: 320px;
+}
+.fc-rule {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.82rem;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: "Poppins", sans-serif;
+}
+.fc-rule span {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.fc-best {
+  color: rgba(254, 202, 87, 0.75);
+  font-size: 0.9rem;
+  margin-bottom: 18px;
+  font-weight: 500;
+}
+.fc-start-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 36px;
+  border: 1px solid rgba(245, 166, 192, 0.3);
+  border-radius: 60px;
+  background: linear-gradient(135deg, rgba(245, 166, 192, 0.18) 0%, rgba(200, 120, 160, 0.1) 100%);
+  color: #fff;
+  font-family: "Poppins", sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.3px;
+}
+.fc-start-btn:hover {
+  background: linear-gradient(135deg, rgba(245, 166, 192, 0.3) 0%, rgba(200, 120, 160, 0.2) 100%);
+  border-color: rgba(245, 166, 192, 0.5);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(245, 166, 192, 0.15);
+}
+.fc-btn-icon {
+  font-size: 1.15rem;
+}
+.fc-back-btn {
+  padding: 10px 28px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 40px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.5);
+  font-family: "Poppins", sans-serif;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.fc-back-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+.fc-over-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+.fc-stats {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin: 22px 0;
+}
+.fc-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.fc-stat-icon {
+  font-size: 1.5rem;
+}
+.fc-stat-val {
+  font-family: "Playfair Display", serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #fff;
+}
+.fc-stat-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: rgba(255, 255, 255, 0.3);
+}
+/* floating petals */
+.fc-floating {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.fc-float-petal {
+  position: absolute;
+  bottom: -30px;
+  animation: fcFloatUp linear infinite;
+  opacity: 0.25;
+}
+@keyframes fcFloatUp {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.28; }
+  90% { opacity: 0.28; }
+  100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+}
+
+/* ── Game area ── */
+.fc-game {
+  max-width: 580px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 76px 10px 24px;
+}
+.fc-hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding: 14px 20px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+.fc-hud-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.fc-hud-label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.3);
+  font-family: "Poppins", sans-serif;
+}
+.fc-hud-val {
+  font-family: "Playfair Display", serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fff;
+}
+.fc-moves {
+  color: rgba(245, 166, 192, 0.9);
+}
+.fc-combo-bar {
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #feca57;
+  text-shadow: 0 0 20px rgba(254, 202, 87, 0.4);
+  animation: fcPulse 0.5s ease infinite alternate;
+  font-family: "Poppins", sans-serif;
+}
+/* Fixed-height combo zone so board doesn't jump */
+.fc-combo-zone {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+/* Helper buttons */
+.fc-helpers {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.fc-helper-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.7);
+  font-family: "Poppins", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.fc-helper-btn:hover:not(:disabled) {
+  background: rgba(245, 166, 192, 0.12);
+  border-color: rgba(245, 166, 192, 0.25);
+  color: #fff;
+  transform: translateY(-1px);
+}
+.fc-helper-btn:disabled, .fc-helper-btn.fc-helper-disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.fc-helper-label {
+  font-size: 0.72rem;
+}
+.fc-helper-count {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+}
+/* Continue button */
+.fc-continue-btn {
+  background: linear-gradient(135deg, rgba(100, 220, 100, 0.18), rgba(60, 180, 60, 0.1));
+  border-color: rgba(100, 220, 100, 0.3);
+}
+.fc-continue-btn:hover {
+  background: linear-gradient(135deg, rgba(100, 220, 100, 0.3), rgba(60, 180, 60, 0.2));
+  border-color: rgba(100, 220, 100, 0.5);
+  box-shadow: 0 12px 30px rgba(100, 220, 100, 0.15);
+}
+@keyframes fcPulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.06); }
+}
+
+/* ── Board (8×8 grid) ── */
+.fc-board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  gap: 5px;
+  padding: 10px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  position: relative;
+  touch-action: none;
+  user-select: none;
+  overflow: hidden;
+}
+.fc-cell {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  will-change: transform, opacity;
+}
+.fc-cell.fc-dropping {
+  animation: fcDrop 0.3s ease-out;
+}
+@keyframes fcDrop {
+  0% { transform: translateY(-30px); opacity: 0; }
+  60% { opacity: 1; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.fc-cell:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.fc-cell.fc-selected {
+  background: rgba(245, 166, 192, 0.15);
+  border-color: rgba(245, 166, 192, 0.45);
+  box-shadow: 0 0 18px rgba(245, 166, 192, 0.2), inset 0 0 12px rgba(245, 166, 192, 0.08);
+  animation: fcSelectedPulse 0.8s ease infinite alternate;
+}
+@keyframes fcSelectedPulse {
+  0% { box-shadow: 0 0 12px rgba(245, 166, 192, 0.15); }
+  100% { box-shadow: 0 0 22px rgba(245, 166, 192, 0.3); }
+}
+.fc-cell.fc-matched {
+  animation: fcPop 0.4s ease forwards;
+}
+@keyframes fcPop {
+  0% { transform: scale(1); opacity: 1; }
+  40% { transform: scale(1.3); opacity: 0.9; }
+  100% { transform: scale(0); opacity: 0; }
+}
+.fc-cell.fc-star {
+  background: rgba(254, 202, 87, 0.1);
+  border-color: rgba(254, 202, 87, 0.25);
+  box-shadow: 0 0 12px rgba(254, 202, 87, 0.1);
+}
+.fc-cell.fc-diamond {
+  background: rgba(120, 120, 255, 0.1);
+  border-color: rgba(120, 120, 255, 0.25);
+  box-shadow: 0 0 12px rgba(120, 120, 255, 0.1);
+}
+.fc-emoji {
+  font-size: clamp(1.3rem, 6vw, 2.4rem);
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+/* Hint glow */
+.fc-cell.fc-hinted {
+  animation: fcHintGlow 0.6s ease infinite alternate;
+}
+@keyframes fcHintGlow {
+  0% {
+    box-shadow: 0 0 8px rgba(254, 202, 87, 0.2);
+    border-color: rgba(254, 202, 87, 0.3);
+    background: rgba(254, 202, 87, 0.06);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(254, 202, 87, 0.45);
+    border-color: rgba(254, 202, 87, 0.6);
+    background: rgba(254, 202, 87, 0.12);
+  }
+}
+/* Score popup */
+.fc-score-popup {
+  position: relative;
+  z-index: 10;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #feca57;
+  text-shadow: 0 0 10px rgba(254, 202, 87, 0.5);
+  animation: fcPopupFloat 0.9s ease forwards;
+}
+@keyframes fcPopupFloat {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-30px) scale(1.2); }
+}
+/* Particles */
+.fc-particle {
+  position: relative;
+  z-index: 8;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  animation: fcParticle 0.7s ease forwards;
+}
+@keyframes fcParticle {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% {
+    transform: translate(
+      calc((var(--dx, 0) - 0.5) * 60px),
+      calc(-30px - var(--dy, 0) * 40px)
+    ) scale(0);
+    opacity: 0;
+  }
+}
+
+/* ── Mobile responsive ── */
+@media (max-width: 500px) {
+  .fc-game {
+    padding: 68px 4px 16px;
+  }
+  .fc-board {
+    gap: 4px;
+    padding: 7px;
+    border-radius: 16px;
+  }
+  .fc-cell {
+    border-radius: 8px;
+  }
+  .fc-emoji {
+    font-size: clamp(1.2rem, 5.5vw, 2.1rem);
+  }
+  .fc-hud {
+    padding: 10px 14px;
+  }
+  .fc-hud-val {
+    font-size: 1.1rem;
+  }
+  .fc-menu-card {
+    padding: 30px 20px;
+  }
+  .fc-title {
+    font-size: 1.8rem;
+  }
+  .fc-helpers {
+    gap: 6px;
+  }
+  .fc-helper-btn {
+    padding: 6px 10px;
+    font-size: 0.72rem;
+  }
+  .fc-combo-zone {
+    height: 28px;
+  }
+}
