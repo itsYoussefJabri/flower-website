@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 
 const FACES = ["/face1.jpeg", "/face2.jpeg", "/face3.jpeg", "/face4.jpeg"];
-const MAX_HEARTS = 2;
+const MAX_HEARTS = 3;
 const TIME_OPTIONS = [
   { label: "30s", value: 30 },
   { label: "1 min", value: 60 },
