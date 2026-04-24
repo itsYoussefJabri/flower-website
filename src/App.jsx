@@ -8,6 +8,7 @@ import FlowerTrail from "./pages/FlowerTrail";
 import ShootingGame from "./pages/ShootingGame";
 import FlowerCrush from "./pages/FlowerCrush";
 import { useState } from "react";
+import AnalyticsTracker from "./AnalyticsTracker";
 
 function App() {
   const location = useLocation();
@@ -19,6 +20,7 @@ function App() {
   const hideNavbar = isGamePage && gamePhase === "playing";
   return (
     <>
+      <AnalyticsTracker />
       {!hideNavbar && <Navbar />}
       {!isGamePage && (
         <div className="rotate-overlay">
